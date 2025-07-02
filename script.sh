@@ -1,32 +1,41 @@
 #!/bin/bash
-# server-hardening.sh
+# server-hardening-amazon.sh
 
-echo "Starting Linux Server Hardening..."
+echo "🔒 Starting Linux Server Hardening on Amazon Linux 2023..."
 
 # Update system
-apt update && apt upgrade -y
+sudo dnf update -y
 
 # Disable root SSH login
-sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sudo sed -i 's/^#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 
-# Disable password authentication (use keys only)
-sed -i 's/^PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+# Disable password-based SSH login (enable key-only)
+sudo sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 
-# Set up firewall (UFW)
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow ssh
-ufw enable
+# Install firewalld if not present
+if ! command -v firewall-cmd &> /dev/null; then
+    sudo dnf install -y firewalld
+    sudo systemctl enable firewalld
+    sudo systemctl start firewalld
+fi
 
-# Install Fail2Ban
-apt install fail2ban -y
-systemctl enable fail2ban
-systemctl start fail2ban
+# Configure firewall
+sudo firewall-cmd --permanent --set-default-zone=public
+sudo firewall-cmd --permanent --add-service=ssh
+sudo firewall-cmd --reload
 
-# Remove unused services
-apt remove -y telnet xinetd
+# Install fail2ban (from EPEL)
+sudo dnf install -y epel-release
+sudo dnf install -y fail2ban
 
-# Restart SSH
-systemctl restart ssh
+# Enable and start fail2ban
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
 
-echo "Server hardening completed."
+# Remove insecure packages (if installed)
+sudo dnf remove -y telnet xinetd || true
+
+# Restart SSH daemon
+sudo systemctl restart sshd
+
+echo "✅ Server hardening completed successfully on Amazon Linux 2023."
