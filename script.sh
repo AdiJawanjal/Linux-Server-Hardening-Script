@@ -1,5 +1,6 @@
 #!/bin/bash
 # server-hardening-amazon.sh
+
 echo "🔒 Starting Linux Server Hardening on Amazon Linux 2023..."
 
 # Update system
