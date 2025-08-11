@@ -1,6 +1,5 @@
 #!/bin/bash
 # server-hardening-ubuntu.sh
-
 echo "🔒 Starting Linux Server Hardening on Ubuntu..."
 
 # Update system
